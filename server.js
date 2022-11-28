@@ -49,6 +49,9 @@ io.on('connect', socket => {
         socket.to(userSocketMap.get(fromUser)).emit('answer',answer,toUser);
         console.log(toUser,':',userSocketMap.get(toUser))
     })
+    socket.on("disconnectCall",(user)=>{
+        socket.to(userSocketMap.get(user)).emit("disconnectCall");
+    });
 })
 
 

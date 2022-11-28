@@ -9,6 +9,13 @@ let localSdp;
 //dom elements
 const onlineUsers = document.querySelector('#onlineUsers');
 const audio = document.querySelector('#audio');
+const lobby = document.querySelector('#lobby');
+const call = document.querySelector('#call');
+const callConfirmation = document.querySelector('#callConfirmation');
+const btnDisconnect =  document.querySelector('#btnDisconnect');
+const btnAccept = document.querySelector('#btnAccept');
+const btnReject = document.querySelector('#btnReject');
+
 //User persistence
 const setupUser = () => {
     curUserName = sessionStorage.getItem('userName') || prompt('Enter a User Name?');
@@ -44,7 +51,11 @@ const initiateCall = (toUser,stream) => {
         audio.srcObject = stream;
         alert(stream.id);
     })
+    lobby.style.display = "none";
+    call.style.display = "block"
 }
+
+
 
 const handleBtnCallClick = (event) => {
     const callTo = event.target.dataset.username;
@@ -68,7 +79,7 @@ socket.on('usersOnline', users => {
 
 const handleOffer = (offer, fromUser, stream)=>{
     isInitiator = false;
-    callFrom = fromUser;
+   
     //disconnection logic
 
     if (localPeer) localPeer = null
@@ -82,24 +93,63 @@ const handleOffer = (offer, fromUser, stream)=>{
     })
     localPeer.on('stream',stream=>{
         audio.srcObject = stream;
-        alert(stream.id);
     })
     console.log(fromUser + ':' + JSON.parse(offer))
     localPeer.signal(JSON.parse(offer));
+    lobby.style.display = "none";
+    call.style.display = "block"
+    callConfirmation.style.display = "none";
 }
 let callFrom;
 socket.on('offer', (offer, fromUser) => {
-    navigator.mediaDevices.getUserMedia({
-        video: false,
-        audio: true
-    }).then(stream=>handleOffer(offer, fromUser,stream)).catch((err) =>{console.log(err);alert(err);})
+    lobby.style.display = "none";
+    callConfirmation.style.display = "block"
+    callFrom = fromUser;
+    btnAccept.addEventListener("click",(evt)=>{
+        navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: true
+        }).then(stream=>handleOffer(offer, fromUser,stream)).catch((err) =>{console.log(err);alert(err);})
+    })
+ 
 })
 
+let callTo;
 socket.on("answer", (answer, toUser) => {
     console.log(toUser + ':' + answer);
+    callTo = toUser;
     localPeer.signal(answer);
 })
 
 document.getElementById('ping').addEventListener('click',()=>{
     localPeer.send(`shit mf connected mf`);
 });
+
+btnDisconnect.addEventListener("click",(evt)=>{
+    console.log("btn disconnect")
+    if(isInitiator) socket.emit('disconnectCall',callTo);
+    else socket.emit('disconnectCall',callFrom);
+    localPeer.destroy();
+    localPeer = null;
+    lobby.style.display = "block";
+    call.style.display = "none"
+    callConfirmation.style.display = "none"; 
+})
+
+btnReject.addEventListener("click",(evt)=>{
+    console.log("btn disconnect")
+    socket.emit('disconnectCall',callFrom);
+    localPeer = null;
+    lobby.style.display = "block";
+    call.style.display = "none"
+    callConfirmation.style.display = "none"; 
+})
+
+socket.on("disconnectCall",()=>{
+    console.log('event fired')
+    localPeer.destroy();
+    localPeer = null;
+    lobby.style.display = "block";
+    call.style.display = "none" 
+    callConfirmation.style.display = "none";
+})
