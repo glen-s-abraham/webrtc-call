@@ -3,7 +3,10 @@ const socketIo = require('socket.io');
 const path = require('path');
 const cron = require('node-cron');
 const app = express();
+const https = require('https');
+const fs = require('fs');
 
+const port = 8000;
 
 
 
@@ -16,7 +19,13 @@ app.get('/ping', (req, res) => {
 })
 
 
-const server = app.listen(8000, () => console.log('listening on port 8000'));
+let server = https.createServer({
+    key: fs.readFileSync('ssl/server.key'),
+    cert: fs.readFileSync('ssl/server.cert')
+  }, app).listen(port, () => {
+    console.log(`socket server listeing on ${port}`);
+  });
+
 
 const io = socketIo(server);
 
@@ -30,21 +39,31 @@ io.on('connect', socket => {
             io.emit('usersOnline',Array.from(userSocketMap.keys()));
         }
     })
+    socket.on('offer',(offer,toUser,fromUser)=>{
+        socket.to(userSocketMap.get(toUser)).emit('offer',offer,fromUser);
+        console.log(fromUser,':',userSocketMap.get(fromUser))
+        console.log(offer)
+    })
+    socket.on('answer',(answer,fromUser,toUser)=>{
+        console.log("answer trigerred",toUser);
+        socket.to(userSocketMap.get(fromUser)).emit('answer',answer,toUser);
+        console.log(toUser,':',userSocketMap.get(toUser))
+    })
 })
 
 
 
 //disconnect cron job-need to do r&d regarding socket.io disconnects
 cron.schedule("*/2 * * * * *", ()=>{
-    let clients = Array.from(clientSocketLookup.keys());
+    let users = Array.from(userSocketMap.keys());
     
-        if(clients.length>0){    
-            clients.forEach(client=>{
-                let clientSocket = io.sockets.sockets.get(clientSocketLookup.get(client));
-                if(!clientSocket){
-                    clientSocketLookup.delete(client);
+        if(users.length>0){    
+            users.forEach(user=>{
+                let userSocket = io.sockets.sockets.get(userSocketMap.get(user));
+                if(!userSocket){
+                    userSocketMap.delete(user);
     
-                    console.log(`removed inactive user: ${client}`)
+                    console.log(`removed inactive user: ${user}`)
                     
                 }
             })
