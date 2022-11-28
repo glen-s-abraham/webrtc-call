@@ -1,4 +1,5 @@
 const socket = io();
+import { Peer } from "peerjs";
 
 let curUserName;
 
