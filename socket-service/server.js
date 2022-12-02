@@ -27,7 +27,12 @@ let server = https.createServer({
   });
 
 
-const io = socketIo(server);
+const io = socketIo(server,{
+    cors:{
+        origin:'*'
+    },
+    path:"/"
+});
 
 io.on('connect', socket => {
     socket.on('userJoin', (userName) => {
@@ -52,6 +57,9 @@ io.on('connect', socket => {
     socket.on("disconnectCall",(user)=>{
         socket.to(userSocketMap.get(user)).emit("disconnectCall");
     });
+    socket.on("message",(message,fromUser,toUser)=>{
+        socket.to(userSocketMap.get(toUser)).emit("message",message,fromUser);
+    })
 })
 
 

@@ -5,10 +5,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webrtc caller</title>
+    <h1 id = "userName"></h1>
     <div id="lobby">
         <ul id="onlineUsers">
         </ul>
-        <button id="ping">Ping</button>
     </div>
     <div id="callConfirmation" style="display: none;">
         <p id="callerId"></p>
@@ -19,11 +19,17 @@
         <audio id="audio" autoplay></audio>
         <button id="btnDisconnect">Disconnect</button>
     </div>
+    <div id="chat" style="display: none;">
+        <div id = "messages" style="height: 400px;width: 800px;overflow-y: scroll;"></div>
+        <textarea id="txtMessage" style="height:100px;width: 600px;overflow-y: scroll;"></textarea>
+        <button type="submit" id="btnSend">Send</button>
+        <button type="button" id="btnClose">Close</button>
+    </div>
      
 </head>
 <body>
     
 </body>
-<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js" integrity="sha384-/KNQL8Nu5gCHLqwqfQjA689Hhoqgi2S84SNUxC3roTe4EhJ9AfLkp8QiQcU8AMzI" crossorigin="anonymous"></script>
 <script src="bundle.js"></script>
 </html>
